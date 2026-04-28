@@ -1,6 +1,6 @@
 # AirWatch — Air Quality Dashboard
 
-A full-stack web application for querying and visualising historical air quality data across West Africa (Ghana and Nigeria), built on top of the [AirQo API](https://docs.airqo.net/airqo-rest-api-documentation).
+A full-stack web application for querying and visualising historical air quality data for specific regions in West Africa (Ghana and Nigeria), built on top of the [AirQo API](https://docs.airqo.net/airqo-rest-api-documentation).
 
 **Live:** [https://d10ln88g8k549v.cloudfront.net](https://d10ln88g8k549v.cloudfront.net)
 
@@ -31,7 +31,7 @@ User
  │                                    └── Uvicorn (FastAPI :8000)
 ```
 
-All traffic enters through **CloudFront**. The frontend (static files) is served from **S3**. API requests (`/api/*`) are forwarded by CloudFront to the **EC2** instance running the FastAPI backend behind Nginx. This means the browser only ever talks to one HTTPS origin — no mixed content issues, no CORS needed.
+All traffic enters through **CloudFront**. The frontend (static files) is served from **S3**. API requests (`/api/*`) are forwarded by CloudFront to the **EC2** instance running the FastAPI backend behind Nginx. This means the browser only ever talks to one HTTPS origin.
 
 ---
 
@@ -55,7 +55,7 @@ S3 alone serves over plain HTTP. CloudFront sits in front of it to provide:
 
 ### EC2 t3.micro: Backend
 
-The FastAPI backend is a long-running Python process that makes outbound HTTP calls to the AirQo API, applies AQI classification logic, and caches responses in memory. This stateful, compute-bound workload is not suited to serverless (Lambda cold starts + execution time limits would hurt). A continuously running EC2 instance is the right fit and stays within free tier limits.
+The FastAPI backend is a long-running Python process that makes outbound HTTP calls to the AirQo API, applies AQI classification logic, and caches responses in memory.
 
 **t3.micro** was chosen for the free tier eligibility.
 
