@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, status
-
-from app.core.cache import cache
+from app.core.cache import cache, make_cache_key
 from app.core.logger import get_logger
 from app.external.airqo.client import AirQoClient, compute_aggregation
 from app.schemas.base import MeasurementQuery
 from app.schemas.response import AggregationResponse, MeasurementsResponse
+from fastapi import APIRouter, Depends, status
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/measurements", tags=["measurements"])
@@ -32,7 +31,7 @@ async def get_measurements(
         "message": "Measurements fetched successfully",
         "data": {
             "measurements": measurements,
-            "total": len(measurements)
+            "total": len(measurements),
         },
     }
 
@@ -48,8 +47,7 @@ async def get_aggregate(
     query: MeasurementQuery = Depends(),
 ):
     """Get aggregated measurements for a given site and date range."""
-
-    cache_key = f"aggregate:{query.site_id}:{query.start_time}:{query.end_time}"
+    cache_key = make_cache_key("aggregate", query.site_id, str(query.start_time), str(query.end_time))
     cached = cache.get(cache_key)
 
     if cached:
@@ -57,7 +55,6 @@ async def get_aggregate(
         aggregation = cached
     else:
         logger.info(f"Aggregate cache miss | computing aggregation | key={cache_key}")
-
         measurements = await airqo_client.fetch_measurements(
             site_id=query.site_id,
             start_time=query.start_time.isoformat(),

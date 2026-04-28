@@ -1,3 +1,4 @@
+import hashlib
 import time
 from typing import Any
 
@@ -35,3 +36,9 @@ class TTLCache:
 
 
 cache = TTLCache()
+
+
+def make_cache_key(prefix: str, *parts: str) -> str:
+    """Generate a short, consistent cache key by hashing the given parts."""
+    digest = hashlib.md5(":".join(parts).encode()).hexdigest()[:12]
+    return f"{prefix}:{digest}"

@@ -97,7 +97,7 @@ async def airqo_upstream_error_handler(request: Request, exc: httpx.HTTPStatusEr
     """Handles non-2xx responses from the AirQo API."""
     _status = exc.response.status_code
     logger.error(
-        f"AirQo API error | Status {status} | "
+        f"AirQo API error | Status {_status} | "
         f"{request.method} {request.url} | {exc.response.text[:200]}"
     )
 
@@ -109,11 +109,11 @@ async def airqo_upstream_error_handler(request: Request, exc: httpx.HTTPStatusEr
         )
     if _status == status.HTTP_429_TOO_MANY_REQUESTS:
         exc_errors = exc.response.json().get("errors", {})
-        retry = exc_errors.get("retry_after_seconds")
+        retry = exc_errors.get("retry_after_seconds", "")
         return error_response(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             code="UPSTREAM_RATE_LIMITED",
-            message="AirQo API rate limit reached. Please wait before retrying.",
+            message=f"AirQo API rate limit reached. Please wait {retry} seconds before retrying.",
             detail=f"Retry after {retry} seconds." if retry else "",
         )
     if _status == status.HTTP_404_NOT_FOUND:

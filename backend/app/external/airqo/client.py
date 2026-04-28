@@ -3,13 +3,15 @@ from datetime import datetime
 from typing import Literal
 
 import httpx
-
+from app.core.cache import cache, make_cache_key
 from app.core.logger import get_logger
 from app.core.settings import get_settings
 from app.external.airqo.utils import BREAKPOINTS, AQIResult, truncate_pm25
 
 logger = get_logger(__name__)
 settings = get_settings()
+
+CACHE_TTL = 60 * 15  # 15 minutes
 
 
 class AirQoClient:
@@ -38,7 +40,7 @@ class AirQoClient:
     ) -> list[dict]:
         """
         Fetch all AirQo monitoring sites, optionally filtered by country.
-        Handles pagination automatically.
+        Handles pagination automatically. Results are cached for 15 minutes.
 
         Args:
             country (str): "Nigeria", "Ghana", or "both"
@@ -46,8 +48,13 @@ class AirQoClient:
         Returns:
             list[dict]: List of site dictionaries
         """
+        cache_key = make_cache_key("sites", country)
+        cached = cache.get(cache_key)
+        if cached:
+            logger.info(f"Sites cache hit | key={cache_key}")
+            return cached
 
-        logger.info(f"Fetching sites | country={country}")
+        logger.info(f"Sites cache miss | fetching from AirQo | country={country}")
 
         all_sites: list[dict] = []
         skip = 0
@@ -95,6 +102,10 @@ class AirQoClient:
 
             skip += limit
 
+        cache.set(cache_key, all_sites, ttl_seconds=CACHE_TTL)
+        logger.info(
+            f"Sites cached | key={cache_key} | total={len(all_sites)} | ttl={CACHE_TTL}s"
+        )
         return all_sites
 
     async def fetch_measurements(
@@ -114,8 +125,14 @@ class AirQoClient:
 
         """
 
+        cache_key = make_cache_key("measurements", site_id, start_time, end_time)
+        cached = cache.get(cache_key)
+        if cached:
+            logger.info(f"Measurements cache hit | key={cache_key}")
+            return cached
+
         logger.info(
-            f"Fetching measurements | site_id={site_id} | "
+            f"Measurements cache miss | fetching from AirQo | site_id={site_id} | "
             f"start={start_time} | end={end_time}"
         )
         all_measurements: list[dict] = []
@@ -167,7 +184,6 @@ class AirQoClient:
                         "pm2_5_value": pm25_value,
                         "aqi_category": aqi.get("aqi_category"),
                         "aqi_color": aqi.get("aqi_color"),
-                        "aqi_index": aqi.get("aqi_index"),
                         "aqi_color_name": aqi.get("aqi_color_name"),
                         "frequency": m.get("frequency", "hourly"),
                     }
@@ -177,9 +193,10 @@ class AirQoClient:
                 break
 
             skip += limit
+        cache.set(cache_key, all_measurements, ttl_seconds=CACHE_TTL)
         logger.info(
-            f"Measurements fetched | site_id={site_id} | "
-            f"total={len(all_measurements)}"
+            f"Measurements cached | site_id={site_id} | "
+            f"total={len(all_measurements)} | ttl={CACHE_TTL}s"
         )
         return all_measurements
 
@@ -278,14 +295,12 @@ def compute_aggregation(measurements: list[dict]) -> dict:
             "time": worst["time"],
             "pm2_5_value": worst.get("pm2_5_value"),
             "aqi_category": worst.get("aqi_category"),
-            "aqi_index": worst.get("aqi_index"),
         },
         "best_reading": (
             {
                 "time": best["time"],
                 "pm2_5_value": best.get("pm2_5_value"),
                 "aqi_category": best.get("aqi_category"),
-                "aqi_index": best.get("aqi_index"),
             }
             if best
             else None

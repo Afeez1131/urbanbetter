@@ -95,7 +95,6 @@ airquality/
 ├── backend/                  # FastAPI REST API
 │   ├── app/
 │   │   ├── main.py           # App factory, middleware, router registration
-│   │   ├── requirements.txt
 │   │   ├── core/             # Settings, cache, exceptions, logger
 │   │   ├── external/airqo/   # AirQo API client + AQI classification
 │   │   ├── routes/           # /api/sites, /api/measurements
