@@ -1,6 +1,6 @@
 # AirWatch — Air Quality Dashboard
 
-A full-stack web application for querying and visualising historical air quality data across West Africa (Ghana and Nigeria), built on top of the [AirQo API](https://platform.airqo.net).
+A full-stack web application for querying and visualising historical air quality data across West Africa (Ghana and Nigeria), built on top of the [AirQo API](https://docs.airqo.net/airqo-rest-api-documentation).
 
 **Live:** [https://d10ln88g8k549v.cloudfront.net](https://d10ln88g8k549v.cloudfront.net)
 
@@ -121,7 +121,7 @@ airquality/
 
 - Python 3.11+
 - Node.js 20+
-- An AirQo API key ([platform.airqo.net](https://platform.airqo.net))
+- An AirQo API key ([docs.airqo.net/]( https://docs.airqo.net/airqo-rest-api-documentation))
 
 ### Backend
 

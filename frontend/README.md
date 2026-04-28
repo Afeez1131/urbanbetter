@@ -1,4 +1,4 @@
-# AirQuality Dashboard — Frontend
+# AirQuality Dashboard: Frontend
 
 React single-page application for querying, visualising, and analysing historical air quality data across West Africa. Consumes the AirQuality Dashboard API.
 
@@ -24,7 +24,7 @@ The dashboard lets users:
 
 1. **Select** a country (Nigeria, Ghana, or both) and a specific monitoring site
 2. **Set** a date range (up to 31 days, defaulting to the last 7 days)
-3. **Fetch** historical measurements and view them across four panels — stat cards, a time-series chart, a category breakdown, and a paginated data table
+3. **Fetch** historical measurements and view them across four panels, stat cards, a time-series chart, a category breakdown, and a paginated data table
 
 ---
 
@@ -47,7 +47,7 @@ The dashboard lets users:
 frontend/
 ├── public/
 ├── src/
-│   ├── App.jsx                        # Root component — layout, state, filter bar
+│   ├── App.jsx                        # Root component, layout, state, filter bar
 │   ├── main.jsx                       # React entry point
 │   ├── api/
 │   │   └── index.js                   # Axios instance + all API calls
@@ -102,7 +102,7 @@ Below the KPI row, two accent cards show the **Worst Reading** (red left border,
 
 One row per AQI category present in the dataset:
 - Colour-coded badge (fixed width, truncation-safe)
-- Animated progress bar proportional to percentage — animates in on mount
+- Animated progress bar proportional to percentage, animates in on mount
 - Percentage value
 - Raw count
 

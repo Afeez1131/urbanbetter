@@ -1,4 +1,4 @@
-# AirQuality Dashboard — Backend
+# AirQuality Dashboard: Backend
 
 REST API for querying, enriching, and aggregating historical air quality data for specific regions in West Africa (Ghana and Nigeria). Built with **FastAPI**, powered by the **AirQo API**.
 
@@ -244,7 +244,7 @@ Liveness check.
 
 ## AQI Classification
 
-The AirQo API returns raw `pm2_5_value` only. AQI category, colour, and colour name are derived server-side using **US EPA PM2.5 breakpoints**, the same scale AirQo uses on their own platform (`analytics.airqo.net`).
+The AirQo API returns raw `pm2_5_value` only. AQI category, colour, and colour name are derived server-side using **US EPA PM2.5 breakpoints**.
 
 | PM2.5 (µg/m³) | Category | Colour | Colour Name |
 |---|---|---|---|
@@ -256,7 +256,7 @@ The AirQo API returns raw `pm2_5_value` only. AQI category, colour, and colour n
 | 250.5 – 500.0 | Hazardous | `#7E0023` | Maroon |
 | < 0 | Invalid | `#AAAAAA` | Grey |
 
-Per EPA standard, PM2.5 values are **truncated** (not rounded) to one decimal place before breakpoint lookup — e.g. `12.99` → `12.9` → **Moderate**, not `13.0`.
+Per EPA standard, PM2.5 values are **truncated** (not rounded) to one decimal place before breakpoint lookup e.g. `12.99` → `12.9` → **Moderate**, not `13.0`.
 
 Source: [airnow.gov/aqi/aqi-basics](https://www.airnow.gov/aqi/aqi-basics/)
         [aqicn.org/scale/](https://aqicn.org/scale/)
