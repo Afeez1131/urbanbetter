@@ -111,8 +111,8 @@ One row per AQI category present in the dataset:
 Built with **ApexCharts** (`react-apexcharts`):
 
 - Smooth line chart with no dot markers at rest, dot on hover
-- Datetime-aware X axis — tick labels adjust automatically with zoom level (e.g. `Apr 26` collapses to `HH:mm` when zoomed to hours)
-- Four US EPA threshold reference lines annotated inline on the right axis: Good / Moderate / Sensitive / Unhealthy — no separate legend needed
+- Datetime-aware X axis, tick labels adjust automatically with zoom level (e.g. `Apr 26` collapses to `HH:mm` when zoomed to hours)
+- Four US EPA threshold reference lines annotated inline on the right axis: Good / Moderate / Sensitive / Unhealthy, no separate legend needed
 - Built-in toolbar: drag-to-zoom, zoom in/out, pan, reset view, PNG download
 - Custom tooltip showing timestamp, PM2.5 value in µg/m³, and a colour-coded AQI category badge
 
@@ -120,7 +120,7 @@ Built with **ApexCharts** (`react-apexcharts`):
 
 - **Columns**: Time · PM2.5 µg/m³ · AQI Category · Colour Name · City · Country · Site ID · Device ID
 - Click **Time** or **PM2.5 µg/m³** headers to sort ascending / descending
-- **Pagination footer**: page-size selector (10 / 20 / 50 / 100), record range indicator, Previous / Next buttons — always visible regardless of page count
+- **Pagination footer**: page-size selector (10 / 20 / 50 / 100), record range indicator, Previous / Next buttons, always visible regardless of page count
 - Rows highlight on hover
 
 ---
@@ -197,10 +197,10 @@ Create a `.env` file at `frontend/`:
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-For production, point this to the EC2 public IP or domain:
+For production, point this to your CloudFront domain (API calls are routed through CloudFront to EC2):
 
 ```env
-VITE_API_BASE_URL=http://<YOUR_EC2_PUBLIC_IP>
+VITE_API_BASE_URL=https://<YOUR_CLOUDFRONT_DOMAIN>.cloudfront.net
 ```
 
 > Vite only exposes variables prefixed with `VITE_` to the browser bundle. Never put secrets in frontend environment variables.
@@ -240,7 +240,7 @@ npm run preview   # Serve the production build locally
 npm run build
 ```
 
-Output is written to `frontend/dist/`. Upload the contents of `dist/` to S3 for deployment — see the root [`DEPLOYMENT.md`](../DEPLOYMENT.md) for the full S3 + CloudFront setup.
+Output is written to `frontend/dist/`. Upload the contents of `dist/` to S3 for deployment.
 
 ```bash
 # Verify the production build before uploading

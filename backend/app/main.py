@@ -19,9 +19,7 @@ logger.info("AirQuality Dashboard API starting up")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS.split(
-        ","
-    ),  # Tighten to frontend URL after deployment
+    allow_origins=settings.ALLOWED_ORIGINS.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

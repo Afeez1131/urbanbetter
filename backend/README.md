@@ -26,7 +26,7 @@ REST API for querying, enriching, and aggregating historical air quality data fo
 The backend acts as a layer between the AirQo API and the frontend:
 
 1. **Fetches** monitoring sites and historical measurements from AirQo with automatic pagination
-2. **Enriches** raw measurements with AQI category, colour, and colour name — fields the AirQo API does not return directly
+2. **Enriches** raw measurements with AQI category, colour, and colour name fields the AirQo API does not return directly
 3. **Aggregates** measurement sets into statistics (total readings, average PM2.5, best/worst readings, data completeness, category breakdown)
 4. **Caches** expensive or frequently repeated responses to stay within AirQo API rate limits
 
@@ -154,17 +154,31 @@ GET /api/measurements?site_id=697071d6cf256a0013a986ac&start_time=2026-04-01&end
     "measurements": [
       {
         "site_id": "697071d6cf256a0013a986ac",
-        "device_id": "aq_g5_873",
-        "device": "University of Ghana Device 4",
-        "city": "Accra",
-        "country": "Ghana",
-        "time": "2026-04-01T06:00:00Z",
-        "pm2_5_value": 20.01,
+        "device_id": "6825a7d7c23a5b00136bfe78",
+        "device": "airqo_g5500",
+        "city": "Port Harcourt",
+        "country": "Nigeria",
+        "time": "2026-04-26T21:00:00.000Z",
+        "pm2_5_value": 12.24,
         "aqi_category": "Moderate",
         "aqi_color": "#FFFF00",
         "aqi_color_name": "Yellow",
         "frequency": "hourly"
-      }
+      },
+      {
+        "site_id": "697071d6cf256a0013a986ac",
+        "device_id": "6825a7d7c23a5b00136bfe78",
+        "device": "airqo_g5500",
+        "city": "Port Harcourt",
+        "country": "Nigeria",
+        "time": "2026-04-26T22:00:00.000Z",
+        "pm2_5_value": 7.74,
+        "aqi_category": "Good",
+        "aqi_color": "#00E400",
+        "aqi_color_name": "Green",
+        "frequency": "hourly"
+      },
+      ...
     ],
     "total": 65
   }
@@ -245,6 +259,7 @@ The AirQo API returns raw `pm2_5_value` only. AQI category, colour, and colour n
 Per EPA standard, PM2.5 values are **truncated** (not rounded) to one decimal place before breakpoint lookup — e.g. `12.99` → `12.9` → **Moderate**, not `13.0`.
 
 Source: [airnow.gov/aqi/aqi-basics](https://www.airnow.gov/aqi/aqi-basics/)
+        [aqicn.org/scale/](https://aqicn.org/scale/)
 
 ---
 
@@ -261,13 +276,13 @@ Source: [airnow.gov/aqi/aqi-basics](https://www.airnow.gov/aqi/aqi-basics/)
 | `data_completeness` | `(actual readings / expected hourly readings) × 100`, capped at 100% |
 | `category_breakdown` | Count and percentage per AQI category, sorted by frequency |
 
-**Data completeness** is calculated from the span between the earliest and latest timestamps in the dataset — it reflects sensor uptime, not calendar coverage.
+**Data completeness** is calculated from the span between the earliest and latest timestamps in the dataset, it reflects sensor uptime, not calendar coverage.
 
 ---
 
 ## Caching Strategy
 
-A custom in-memory `TTLCache` (`app/core/cache.py`) is used — no external dependencies, no extra AWS cost.
+A custom in-memory `TTLCache` (`app/core/cache.py`) is used, no external dependencies, no extra AWS cost.
 
 | Data | Cached | TTL | Rationale |
 |---|---|---|---|
@@ -275,7 +290,7 @@ A custom in-memory `TTLCache` (`app/core/cache.py`) is used — no external depe
 | Measurements | No | — | High cardinality; always user-specific |
 | Aggregations | Yes | 15 minutes | Expensive to compute; same result for same query |
 
-**Trade-off:** Cache is per-process. With 1–2 Gunicorn workers on a `t2.micro`, each worker maintains its own cache — a cache miss in one worker does not warm another. For the expected traffic profile of this deployment this is acceptable. A production upgrade would swap `TTLCache` for a shared Redis instance.
+**Trade-off:** Cache is per-process. With a single Uvicorn worker on a `t3.micro`, this is perfectly sufficient, there is no cross-process cache sharing problem. A production upgrade running multiple workers would swap `TTLCache` for a shared Redis instance or ElastiCache.
 
 ---
 
@@ -323,7 +338,6 @@ All errors return a consistent envelope:
 | `httpx.ConnectError` | `airqo_connect_error_handler` | 502 |
 | `Exception` (catch-all) | `unhandled_exception_handler` | 500 |
 
-> The `pydantic_validation_handler` exists because FastAPI only auto-converts `pydantic.ValidationError` → `RequestValidationError` for request body parameters. Query-param models used via `Depends()` can let the raw Pydantic error escape — this handler catches those.
 
 ---
 
@@ -333,12 +347,14 @@ All errors return a consistent envelope:
 |---|---|---|---|
 | `AIRQO_API_KEY` | Yes | — | AirQo API token |
 | `AIRQO_BASE_URL` | No | `https://api.airqo.net/api/v2` | AirQo base URL |
+| `ALLOWED_ORIGINS` | No | `http://localhost:5173` | Frontend URL |
 
 Create a `.env` file at `backend/`:
 
 ```env
 AIRQO_API_KEY=your_api_key_here
 AIRQO_BASE_URL=https://api.airqo.net/api/v2
+ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 ---
@@ -347,7 +363,7 @@ AIRQO_BASE_URL=https://api.airqo.net/api/v2
 
 ```bash
 # Clone and enter the backend directory
-git clone <repo-url>
+git clone https://github.com/Afeez1131/urbanbetter
 cd airquality/backend
 
 # Create and activate virtual environment
@@ -355,7 +371,7 @@ python3.11 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install -r app/requirements.txt
+pip install -r requirements.txt
 
 # Create .env
 cp .env.example .env             # then fill in AIRQO_API_KEY
@@ -384,16 +400,15 @@ curl "http://localhost:8000/api/measurements/aggregate?site_id=<SITE_ID>&start_t
 
 ## EC2 Deployment
 
-The backend is deployed on an **AWS EC2 `t2.micro`** instance (free tier) behind **Nginx** as a reverse proxy, with **Gunicorn + Uvicorn workers** serving the FastAPI app and **systemd** managing the process.
+The backend is deployed on an **AWS EC2 `t3.micro`** instance (free tier) behind **Nginx** as a reverse proxy, with **Uvicorn** serving the FastAPI app and **systemd** managing the process.
 
-Full step-by-step deployment instructions are in [`DEPLOYMENT.md`](../DEPLOYMENT.md) at the repository root.
 
 **Production stack summary:**
 
 | Component | Role |
 |---|---|
-| EC2 `t2.micro` | Application host (free tier) |
-| Nginx | Reverse proxy, SSL termination |
-| Gunicorn + Uvicorn | ASGI process manager |
+| EC2 `t3.micro` | Application host (free tier) |
+| Nginx | Reverse proxy |
+| Uvicorn | ASGI server |
 | systemd | Service supervision and auto-restart |
 | `.env` on server | Secret management (never committed) |
