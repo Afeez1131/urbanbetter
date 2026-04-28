@@ -225,7 +225,7 @@ def get_aqi_info(pm25: float) -> AQIResult:
 
 
 def compute_aggregation(measurements: list[dict]) -> dict:
-    """Compute statistics from measurements returned by fetch_measurements()."""
+    """Compute statistics from measurements returned by fetch_measurements functions."""
     if not measurements:
         return {
             "total_datapoints": 0,
