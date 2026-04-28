@@ -2,13 +2,12 @@ import traceback
 
 import httpx
 import orjson
+from app.core.logger import get_logger
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError as PydanticValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
-
-from app.core.logger import get_logger
 
 logger = get_logger(__name__)
 

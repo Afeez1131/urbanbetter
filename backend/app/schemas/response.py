@@ -1,12 +1,11 @@
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 from app.schemas.base import (
     AggregationResponseBase,
     MeasurementsResponseBase,
     SitesResponseBase,
 )
+from pydantic import BaseModel, Field
 
 
 class BaseResponse(BaseModel):

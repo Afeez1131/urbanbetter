@@ -47,7 +47,9 @@ async def get_aggregate(
     query: MeasurementQuery = Depends(),
 ):
     """Get aggregated measurements for a given site and date range."""
-    cache_key = make_cache_key("aggregate", query.site_id, str(query.start_time), str(query.end_time))
+    cache_key = make_cache_key(
+        "aggregate", query.site_id, str(query.start_time), str(query.end_time)
+    )
     cached = cache.get(cache_key)
 
     if cached:

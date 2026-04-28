@@ -1,10 +1,9 @@
 from typing import Literal
 
-from fastapi import APIRouter, Query, status
-
 from app.core.logger import get_logger
 from app.external.airqo.client import AirQoClient
 from app.schemas.response import SitesResponse
+from fastapi import APIRouter, Query, status
 
 router = APIRouter(prefix="/api/sites", tags=["sites"])
 logger = get_logger(__name__)
